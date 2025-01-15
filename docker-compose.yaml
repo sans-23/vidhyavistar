@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  exam_service:
+    build:
+      context: ./vv_exam_management_service
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://exam_db:5432/examdb
+      SPRING_DATASOURCE_USERNAME: examuser
+      SPRING_DATASOURCE_PASSWORD: exampassword
+    volumes:
+      - ./vv_exam_management_service:/app
+    depends_on:
+      - exam_db
+    command: ./mvnw spring-boot:run
+
+  school_service:
+    build:
+      context: ./vv-school-management-service
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://school_db:5432/schooldb
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpassword
+    volumes:
+      - ./vv-school-management-service:/app
+    depends_on:
+      - school_db
+    command: ./mvnw spring-boot:run
+
+  exam_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: examdb
+      POSTGRES_USER: examuser
+      POSTGRES_PASSWORD: exampassword
+    ports:
+      - "5433:5432"
+
+  school_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: schooldb
+      POSTGRES_USER: schooluser
+      POSTGRES_PASSWORD: schoolpassword
+    ports:
+      - "5434:5432"
+
+  keycloak_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: keycloakdb
+      POSTGRES_USER: keycloakuser
+      POSTGRES_PASSWORD: keycloakpassword
+    ports:
+      - "5435:5432"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      DB_VENDOR: postgres
+      DB_ADDR: keycloak_db
+      DB_DATABASE: keycloakdb
+      DB_USER: keycloakuser
+      DB_PASSWORD: keycloakpassword
+    ports:
+      - "8083:8080"
+    depends_on:
+      - keycloak_db
+    command: ["start-dev"]
